@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:wather_app/blocs/bloc/weather_bloc.dart';
 import 'package:wather_app/presentation/screens/Home.dart';
+import 'package:geolocator/geolocator.dart';
 
 void main() {
   runApp(const MyApp());
@@ -8,32 +11,71 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
+      title: 'Weather App',
       debugShowCheckedModeBanner: false,
-      home: HomePage(),
+      home: FutureBuilder<Position>(
+        future: _determinePosition(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          } else if (snapshot.hasError) {
+            print(snapshot.error);
+            return Scaffold(
+              body: Center(
+                child: Text(
+                  'Error: ${snapshot.error}',
+                  style: TextStyle(fontSize: 18, color: Colors.red),
+                ),
+              ),
+            );
+          } else if (snapshot.hasData) {
+            return BlocProvider(
+              create: (context) =>
+                  WeatherBloc()..add(GetWeather(p: snapshot.data!)),
+              child: const HomePage(),
+            );
+          } else {
+            return const Scaffold(
+              body: Center(
+                child: Text('Unexpected error occurred.'),
+              ),
+            );
+          }
+        },
+      ),
     );
   }
+}
+
+/// Determine the current position of the device.
+Future<Position> _determinePosition() async {
+  bool serviceEnabled;
+  LocationPermission permission;
+
+  // Check if location services are enabled.
+  serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  if (!serviceEnabled) {
+    return Future.error('Location services are disabled.');
+  }
+
+  permission = await Geolocator.checkPermission();
+  if (permission == LocationPermission.denied) {
+    permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied) {
+      return Future.error('Location permissions are denied.');
+    }
+  }
+
+  if (permission == LocationPermission.deniedForever) {
+    return Future.error(
+        'Location permissions are permanently denied. Please enable them in settings.');
+  }
+
+  // Permissions are granted, get the position.
+  return await Geolocator.getCurrentPosition();
 }

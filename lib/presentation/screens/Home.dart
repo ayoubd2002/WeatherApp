@@ -2,7 +2,11 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
+import 'package:wather_app/blocs/bloc/weather_bloc.dart';
 import 'package:wather_app/presentation/widget/homewidget.dart';
+import 'package:weather/weather.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -60,93 +64,110 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.transparent,
                 ),
               ),
-              SizedBox(
-                height: MediaQuery.of(context).size.height,
-                width: MediaQuery.of(context).size.width,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Algeria -Mila",
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(
-                      height: 10,
-                    ),
-                    Text(
-                      "Good Morning",
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 30),
-                    ),
-                    Image.asset("assets/1.png"),
-                    Center(
-                      child: Text(
-                        "21°C",
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 50),
+              BlocBuilder<WeatherBloc, WeatherState>(
+                builder: (context, state) {
+                  if (state is WeatherloadedState) {
+                    return SizedBox(
+                      height: MediaQuery.of(context).size.height,
+                      width: MediaQuery.of(context).size.width,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "${state.weather.areaName}",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Text(
+                            "Good Morning",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 30),
+                          ),
+                          Image.asset("assets/1.png"),
+                          Center(
+                            child: Text(
+                              "${state.weather.temperature!.celsius!.round()}°C",
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 50),
+                            ),
+                          ),
+                          Center(
+                            child: Text(
+                              "${state.weather.weatherMain!.toUpperCase()}",
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 30),
+                            ),
+                          ),
+                          SizedBox(
+                            height: 5,
+                          ),
+                          Center(
+                            child: Text(
+                              DateFormat("EEEE dd . ")
+                                  .add_j()
+                                  .format(state.weather.date!),
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w300,
+                                  fontSize: 16),
+                            ),
+                          ),
+                          SizedBox(
+                            height: 26,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Homewidget(
+                                  image: "assets/sun.png",
+                                  title: "SunRise",
+                                  time: DateFormat()
+                                      .add_j()
+                                      .format(state.weather.sunrise!)),
+                              Homewidget(
+                                  image: "assets/4.png",
+                                  title: "SunSet",
+                                  time: DateFormat()
+                                      .add_j()
+                                      .format(state.weather.sunset!)),
+                            ],
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Divider(),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Homewidget(
+                                  image: "assets/tma.png",
+                                  title: "temp Min",
+                                  time:
+                                      "${state.weather.tempMin!.celsius!.toStringAsFixed(0)}°C"),
+                              Homewidget(
+                                  image: "assets/t2.png",
+                                  title: "temp Max",
+                                  time:
+                                      "${state.weather.tempMax!.celsius!.toStringAsFixed(0)}°C"),
+                            ],
+                          ),
+                        ],
                       ),
-                    ),
-                    Center(
-                      child: Text(
-                        "THUNDERSTORM",
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 30),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 5,
-                    ),
-                    Center(
-                      child: Text(
-                        "Friday 16 .09.41am",
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w300,
-                            fontSize: 16),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 26,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Homewidget(
-                            image: "assets/sun.png",
-                            title: "sunrise",
-                            time: "6:34 am"),
-                        Homewidget(
-                            image: "assets/sun.png",
-                            title: "sunrise",
-                            time: "6:34 am"),
-                      ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Divider(),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Homewidget(
-                            image: "assets/sun.png",
-                            title: "sunrise",
-                            time: "6:34 am"),
-                        Homewidget(
-                            image: "assets/sun.png",
-                            title: "sunrise",
-                            time: "6:34 am"),
-                      ],
-                    ),
-                  ],
-                ),
+                    );
+                  } else {
+                    return Container();
+                  }
+                },
               )
             ],
           ),
